@@ -18,10 +18,11 @@ namespace AzureFunctions.Functions
         ) {
             for (var i = 0; i <= 100; i++)
             {
-                var percentage = await context.CallActivityAsync<int>("DurableOrchestrator_Activity_DoSomething", i);
+                var extra = context.IsReplaying ? "[REPLAY]" : "";
 
-                if (!context.IsReplaying)
-                    log.LogInformation($"Orchestrator received: {percentage}%");
+                log.LogInformation($"{extra}Starting activity..");
+                var percentage = await context.CallActivityAsync<int>("DurableOrchestrator_Activity_DoSomething", i);
+                log.LogInformation($"{extra}Orchestrator received: {percentage}%");
 
                 context.SetCustomStatus(new { percentage = percentage });
             }
@@ -30,8 +31,8 @@ namespace AzureFunctions.Functions
         [FunctionName("DurableOrchestrator_Activity_DoSomething")]
         public static int DoSomething([ActivityTrigger] int percentage, ILogger log)
         {
-            log.LogInformation($"Waiting one second to return {percentage}");
-            Thread.Sleep(1000);
+            log.LogInformation($"Waiting some time to return {percentage}");
+            Thread.Sleep(100);
             return percentage;
         }
 
